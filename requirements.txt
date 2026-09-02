@@ -1,0 +1,14 @@
+pandas
+networkx
+python-louvain
+leidenalg
+python-igraph
+rapidfuzz
+phonenumbers
+scikit-learn
+matplotlib
+anthropic
+fastapi
+uvicorn
+pyyaml
+python-dotenv

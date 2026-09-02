@@ -1,0 +1,29 @@
+# Abuse Ring Sentinel — configuration
+# All thresholds/weights live here so detection stays tunable without touching code.
+
+# Edge weight by attribute type — how discriminating (rare) a shared attribute is.
+# Higher weight = stronger evidence of coordination (e.g. shared device/card).
+# Lower weight = weak evidence, common to share innocently (e.g. pincode/ip_subnet).
+edge_weights:
+  device: 0        # TODO: e.g. 1.0 — device fingerprint match is rare by accident
+  card: 0          # TODO: e.g. 0.9 — shared card/UPI VPA
+  address: 0       # TODO: e.g. 0.6 — fuzzy-matched near-duplicate address
+  phone: 0         # TODO: e.g. 0.7 — normalized phone number match
+  ip_subnet: 0     # TODO: e.g. 0.2 — shared /24 subnet, weak signal
+  pincode: 0       # TODO: e.g. 0.1 — shared postal code, weakest signal
+
+# Community detection (Louvain/Leiden) resolution parameter.
+# Higher = more, smaller communities; lower = fewer, larger communities.
+community_resolution: 0   # TODO: e.g. 1.0
+
+# Minimum ring-likelihood score for a community to be surfaced as suspicious.
+ring_score_threshold: 0   # TODO: e.g. 0.7
+
+# Cost model — used to convert detection outcomes into ₹ impact for threshold selection.
+cost_model:
+  avg_order_value: 0      # TODO: e.g. 1200 (₹)
+  chargeback_cost: 0      # TODO: e.g. 2500 (₹ per chargeback, incl. fees/reverse logistics)
+  false_block_cost: 0     # TODO: e.g. 1500 (₹ lost revenue/reputation per wrongly blocked legit customer)
+
+# Reproducibility.
+random_seed: 0   # TODO: e.g. 42
