@@ -14,15 +14,20 @@ interface NetworkGraphProps {
 type FGNode = NodeObject<GraphNode>
 type FGLink = LinkObject<GraphNode, GraphEdge>
 
-const ENTITY_COLOR = '#525252' // neutral-600, non-customer entity nodes (device/card/phone/...)
+const ENTITY_COLOR = '#525252' // neutral-600, strong-signal entity nodes (device/card)
+const WEAK_ENTITY_COLOR = 'rgba(82, 82, 82, 0.4)' // neutral-600 @ 40%, weak-signal entities (pincode/ip_subnet/phone)
 const RING_COLOR = '#ef4444' // danger
 const BENIGN_COLOR = '#22c55e' // safe
 const DIM_COLOR = 'rgba(115, 115, 115, 0.25)'
 
+// Weak-signal, high-count shared-entity types — these recede visually so red rings stand out.
+const WEAK_ENTITY_TYPES = new Set(['pincode', 'ip_subnet', 'phone'])
+
 function nodeColor(node: FGNode, selectedClusterId: number | null, clusterEntityIds: Set<string>): string {
   if (node.type !== 'customer') {
-    if (selectedClusterId !== null) return clusterEntityIds.has(node.id) ? ENTITY_COLOR : DIM_COLOR
-    return ENTITY_COLOR
+    const baseColor = WEAK_ENTITY_TYPES.has(node.type) ? WEAK_ENTITY_COLOR : ENTITY_COLOR
+    if (selectedClusterId !== null) return clusterEntityIds.has(node.id) ? baseColor : DIM_COLOR
+    return baseColor
   }
   const isDimmed = selectedClusterId !== null && node.cluster_id !== selectedClusterId
   if (isDimmed) return DIM_COLOR
@@ -30,7 +35,7 @@ function nodeColor(node: FGNode, selectedClusterId: number | null, clusterEntity
 }
 
 function nodeRadius(node: FGNode): number {
-  if (node.type !== 'customer') return 2
+  if (node.type !== 'customer') return WEAK_ENTITY_TYPES.has(node.type) ? 1.2 : 2
   return 3 + node.risk * 9
 }
 
@@ -81,6 +86,10 @@ export default function NetworkGraph({ graph, selectedClusterId, onSelectCluster
     ) as unknown as FGLink[]
     return { nodes, links }
   }, [graph, ringsOnly])
+
+  // linkColor/linkWidth run per-link on every animation frame — a Map lookup instead of
+  // graph.nodes.find() avoids an O(n) scan per link per frame (was the source of graph lag).
+  const nodeById = useMemo(() => new Map(graph.nodes.map((n) => [n.id, n])), [graph])
 
   // Entity nodes (device/card/...) directly shared by the selected cluster's customers —
   // these have cluster_id: null themselves, but should stay lit up (not dimmed) alongside
@@ -150,15 +159,32 @@ export default function NetworkGraph({ graph, selectedClusterId, onSelectCluster
         nodeRelSize={1}
         linkColor={(l) => {
           const link = l as unknown as GraphEdge & { source: string | GraphNode; target: string | GraphNode }
-          const srcId = linkEndId(link.source)
-          const tgtId = linkEndId(link.target)
-          if (selectedClusterId === null) return `rgba(163,163,163,${0.15 + link.weight * 0.4})`
-          const srcNode = graph.nodes.find((n) => n.id === srcId)
-          const tgtNode = graph.nodes.find((n) => n.id === tgtId)
+          const srcNode = nodeById.get(linkEndId(link.source))
+          const tgtNode = nodeById.get(linkEndId(link.target))
+          if (selectedClusterId === null) {
+            const touchesSuspicious = srcNode?.suspicious || tgtNode?.suspicious
+            if (touchesSuspicious) return `rgba(248,113,113,${0.35 + link.weight * 0.5})`
+            const touchesWeakEntity =
+              (srcNode && srcNode.type !== 'customer' && WEAK_ENTITY_TYPES.has(srcNode.type)) ||
+              (tgtNode && tgtNode.type !== 'customer' && WEAK_ENTITY_TYPES.has(tgtNode.type))
+            if (touchesWeakEntity) return `rgba(115,115,115,${0.05 + link.weight * 0.1})`
+            return `rgba(163,163,163,${0.15 + link.weight * 0.4})`
+          }
           const inCluster = srcNode?.cluster_id === selectedClusterId || tgtNode?.cluster_id === selectedClusterId
           return inCluster ? `rgba(248,113,113,${0.3 + link.weight * 0.5})` : 'rgba(82,82,82,0.08)'
         }}
-        linkWidth={(l) => 0.5 + (l as unknown as GraphEdge).weight * 2}
+        linkWidth={(l) => {
+          const link = l as unknown as GraphEdge & { source: string | GraphNode; target: string | GraphNode }
+          const base = 0.5 + link.weight * 2
+          if (selectedClusterId !== null) return base
+          const srcNode = nodeById.get(linkEndId(link.source))
+          const tgtNode = nodeById.get(linkEndId(link.target))
+          if (srcNode?.suspicious || tgtNode?.suspicious) return base * 1.6
+          const touchesWeakEntity =
+            (srcNode && srcNode.type !== 'customer' && WEAK_ENTITY_TYPES.has(srcNode.type)) ||
+            (tgtNode && tgtNode.type !== 'customer' && WEAK_ENTITY_TYPES.has(tgtNode.type))
+          return touchesWeakEntity ? base * 0.5 : base
+        }}
         onNodeClick={(n) => handleNodeClick(n as FGNode)}
         onNodeHover={(n) => setHoverNode(n as FGNode | null)}
         onBackgroundClick={handleBackgroundClick}

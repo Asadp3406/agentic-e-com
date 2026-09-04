@@ -22,6 +22,25 @@ const STATUS_STYLES: Record<RingSummary['status'], string> = {
   unlabeled: 'bg-neutral-800 text-neutral-400 border-neutral-700',
 }
 
+const ROW_ACCENT_STYLES: Record<RingSummary['status'], string> = {
+  suspicious: 'border-l-4 border-l-danger',
+  cleared: 'border-l-4 border-l-safe',
+  unlabeled: 'border-l-4 border-l-neutral-700',
+}
+
+const TOP_FEATURE_LABELS: Record<string, string> = {
+  event_rate_ratio: 'elevated events',
+  high_weight_edge_share: 'device/card reuse',
+  timing_burst_score: 'signup burst',
+  fresh_account_ratio: 'fresh accounts',
+  promo_concentration: 'promo farming',
+}
+
+function topFeatureLabel(topFeature: string | undefined): string | null {
+  if (!topFeature) return null
+  return TOP_FEATURE_LABELS[topFeature] ?? topFeature.replace(/_/g, ' ')
+}
+
 export default function RingList({ rings, selectedClusterId, onSelectRing }: RingListProps) {
   const sorted = [...rings].sort((a, b) => b.score - a.score)
 
@@ -52,12 +71,20 @@ export default function RingList({ rings, selectedClusterId, onSelectRing }: Rin
                   title={ring.ground_truth}
                   className={
                     'cursor-pointer border-b border-neutral-800/60 transition-colors hover:bg-neutral-800/60 ' +
+                    ROW_ACCENT_STYLES[ring.status] + ' ' +
                     (isSelected ? 'bg-neutral-800' : '')
                   }
                 >
                   <td className="px-4 py-2 text-neutral-400">{ring.id}</td>
                   <td className="px-4 py-2 text-neutral-300">{ring.size}</td>
-                  <td className="px-4 py-2 font-mono text-neutral-200">{ring.score.toFixed(3)}</td>
+                  <td className="px-4 py-2">
+                    <span className="font-mono text-neutral-200">{ring.score.toFixed(3)}</span>
+                    {topFeatureLabel(ring.top_feature) && (
+                      <span className="ml-2 font-mono text-[10px] text-neutral-500">
+                        {topFeatureLabel(ring.top_feature)}
+                      </span>
+                    )}
+                  </td>
                   <td className="px-4 py-2 text-neutral-300">{formatRupees(ring.rupee_risk)}</td>
                   <td className="px-4 py-2">
                     <span

@@ -46,13 +46,15 @@ export default function App() {
     const benignFalsePositives = rings.filter(
       (r) => r.ground_truth.startsWith('benign') && r.status === 'suspicious',
     ).length
+    const totalAccounts = graph ? graph.nodes.filter((n) => n.type === 'customer').length : null
     return {
       nRings: suspicious.length,
       nAccountsFlagged,
       totalRupeeAtRisk,
       falsePositiveRate: benignTotal > 0 ? benignFalsePositives / benignTotal : null,
+      totalAccounts,
     }
-  }, [rings])
+  }, [rings, graph])
 
   const isBusy = phase === 'running' || phase === 'loading-results'
 
@@ -123,6 +125,7 @@ export default function App() {
             nAccountsFlagged={summary.nAccountsFlagged}
             totalRupeeAtRisk={summary.totalRupeeAtRisk}
             falsePositiveRate={summary.falsePositiveRate}
+            totalAccounts={summary.totalAccounts}
           />
         )}
 
@@ -137,8 +140,37 @@ export default function App() {
                   ringsOnly={ringsOnly}
                 />
               ) : (
-                <div className="flex h-full items-center justify-center text-sm text-neutral-600">
-                  {isBusy ? 'Building the network…' : 'Press "Run detection" to draw the network.'}
+                <div className="flex h-full flex-col items-center justify-center gap-4 text-center">
+                  {isBusy ? (
+                    <p className="text-lg font-medium text-neutral-500">Building the network…</p>
+                  ) : (
+                    <>
+                      <svg
+                        width="72"
+                        height="72"
+                        viewBox="0 0 72 72"
+                        fill="none"
+                        className="text-neutral-700"
+                      >
+                        <circle cx="36" cy="14" r="6" fill="currentColor" />
+                        <circle cx="14" cy="52" r="6" fill="currentColor" />
+                        <circle cx="58" cy="52" r="6" fill="currentColor" />
+                        <circle cx="36" cy="38" r="4.5" fill="currentColor" className="text-neutral-600" />
+                        <line x1="36" y1="14" x2="36" y2="38" stroke="currentColor" strokeWidth="1.5" />
+                        <line x1="14" y1="52" x2="36" y2="38" stroke="currentColor" strokeWidth="1.5" />
+                        <line x1="58" y1="52" x2="36" y2="38" stroke="currentColor" strokeWidth="1.5" />
+                        <line x1="14" y1="52" x2="58" y2="52" stroke="currentColor" strokeWidth="1.5" />
+                      </svg>
+                      <div>
+                        <p className="text-lg font-medium text-neutral-400">
+                          Press &quot;Run detection&quot; to draw the network
+                        </p>
+                        <p className="mt-1 text-sm text-neutral-600">
+                          Detects coordinated fraud rings via shared device/card/address signals
+                        </p>
+                      </div>
+                    </>
+                  )}
                 </div>
               )}
             </div>
