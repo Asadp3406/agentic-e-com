@@ -5,25 +5,71 @@
 # Higher weight = stronger evidence of coordination (e.g. shared device/card).
 # Lower weight = weak evidence, common to share innocently (e.g. pincode/ip_subnet).
 edge_weights:
-  device: 0        # TODO: e.g. 1.0 — device fingerprint match is rare by accident
-  card: 0          # TODO: e.g. 0.9 — shared card/UPI VPA
-  address: 0       # TODO: e.g. 0.6 — fuzzy-matched near-duplicate address
-  phone: 0         # TODO: e.g. 0.7 — normalized phone number match
-  ip_subnet: 0     # TODO: e.g. 0.2 — shared /24 subnet, weak signal
-  pincode: 0       # TODO: e.g. 0.1 — shared postal code, weakest signal
+  device: 1.0      # device fingerprint match is rare by accident
+  card: 0.9        # shared card/UPI VPA
+  phone: 0.7       # normalized phone number match
+  address: 0.6     # fuzzy-matched near-duplicate address
+  ip_subnet: 0.2   # shared /24 subnet, weak signal
+  pincode: 0.1     # shared postal code, weakest signal
 
 # Community detection (Louvain/Leiden) resolution parameter.
 # Higher = more, smaller communities; lower = fewer, larger communities.
-community_resolution: 0   # TODO: e.g. 1.0
+# NOTE: this is Leiden's CPM resolution_parameter, which is on a very different scale
+# than modularity's -- CPM compares edge density inside a community against this value
+# directly, so with our sparse rarity-weighted graph (most edge weights are 0.1-1.0,
+# not ~1 per pair), values anywhere near 1.0 fragment everything into singletons.
+# 0.001 was hand-tuned against Stage 1's synthetic ground truth (see
+# docs/stage-4-community-detection.md): it recovers 11/15 injected rings at >=80%
+# purity with zero giant-blob flags, while keeping the honesty-trap clusters (office/
+# hostel/family) fragmented or small rather than merged into one mega-community.
+# If you regenerate data with a different scale/density, re-sweep this value --
+# it's tuned to this dataset's edge-weight distribution, not a universal constant.
+community_resolution: 0.001
 
 # Minimum ring-likelihood score for a community to be surfaced as suspicious.
 ring_score_threshold: 0   # TODO: e.g. 0.7
 
 # Cost model — used to convert detection outcomes into ₹ impact for threshold selection.
+# Filled in at Stage 7 (agent/policy.py needs real numbers to gate the `block` action on
+# confidence tied to ₹ risk, per the task spec). Rough e-commerce SMB assumptions, not
+# fitted to any real merchant — Stage 8's eval can refine these against real unit economics
+# if this becomes more than a synthetic-data demo.
 cost_model:
-  avg_order_value: 0      # TODO: e.g. 1200 (₹)
-  chargeback_cost: 0      # TODO: e.g. 2500 (₹ per chargeback, incl. fees/reverse logistics)
-  false_block_cost: 0     # TODO: e.g. 1500 (₹ lost revenue/reputation per wrongly blocked legit customer)
+  avg_order_value: 1200      # ₹ per order, used to size a ring's estimated exposure
+  chargeback_cost: 2500      # ₹ per chargeback/return/cod_refusal event (fees + reverse logistics)
+  false_block_cost: 1500     # ₹ lost revenue/reputation per wrongly blocked legit customer
+  # Minimum agent confidence required before `block` is allowed. Below this, policy.py
+  # downgrades block -> manual_review regardless of what the agent recommended — see that
+  # module's docstring for the ₹-ratio reasoning behind this specific number.
+  block_confidence_threshold: 0.85
+  # Minimum confidence for `hold` (freeze payouts/shipping pending review, less drastic
+  # than `block`). Below this floor, downgrade further to `manual_review`.
+  hold_confidence_threshold: 0.6
+
+# Stage 6 (advanced/optional) — graph autoencoder anomaly layer. See detect/gnn.py's
+# module docstring for the approach, and docs/stage-6-gnn.md for the before/after eval
+# that decided this flag's value. `enabled: false` means scorer.py runs Stage-5-only
+# (six hand-crafted features), exactly as before Stage 6 existed.
+# DECIDED false: eval/gnn_eval.py showed the GNN feature HURTS ring recall at the
+# tightest (most realistic, 0% FP) operating point -- 100% -> 85.7% -- because one
+# benign "independent" community's structural-anomaly score outranks a real ring. See
+# docs/stage-6-gnn.md for the full before/after numbers and why. Leave this false.
+gnn:
+  enabled: false
+  embedding_dim: 16
+  hidden_dim: 32
+  epochs: 100
+  lr: 0.01
+  # Fusion weight into scorer.py's combined score when enabled=true. Other six weights
+  # are scaled down proportionally so everything still sums to 1.0 -- see scorer.py.
+  fusion_weight: 0.15
 
 # Reproducibility.
-random_seed: 0   # TODO: e.g. 42
+random_seed: 42
+
+# Stage 1 — synthetic data generation volume knobs.
+data_gen:
+  n_legit_customers: 1500
+  n_rings: 15              # 12-18
+  ring_size_min: 4
+  ring_size_max: 9

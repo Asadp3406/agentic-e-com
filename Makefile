@@ -1,28 +1,45 @@
-.PHONY: setup data graph detect investigate eval api web demo
+.PHONY: setup data resolve graph detect gnn-eval investigate eval api web web-install demo
+
+VENV := .venv
+PYTHON := $(VENV)/bin/python
 
 setup:
-	@echo "not implemented"
+	python3 -m venv $(VENV)
+	$(VENV)/bin/pip install -q --upgrade pip
+	$(VENV)/bin/pip install -q -r requirements.txt
 
 data:
-	@echo "not implemented"
+	$(PYTHON) data/generate.py
+
+resolve:
+	$(PYTHON) resolve/entity_resolution.py
 
 graph:
-	@echo "not implemented"
+	$(PYTHON) -m graph.build
 
 detect:
-	@echo "not implemented"
+	$(PYTHON) -m detect.community
+	$(PYTHON) -m baseline.txn_classifier
+	$(PYTHON) -m detect.scorer
+
+gnn-eval:
+	$(PYTHON) -m eval.gnn_eval
 
 investigate:
-	@echo "not implemented"
+	$(PYTHON) -m agent.policy
 
 eval:
-	@echo "not implemented"
+	$(PYTHON) -m eval.gnn_eval
+	$(PYTHON) -m eval.run_eval
 
 api:
-	@echo "not implemented"
+	$(VENV)/bin/uvicorn api.main:app --reload --port 8000
+
+web-install:
+	cd web && npm install
 
 web:
-	@echo "not implemented"
+	cd web && npm run dev
 
 demo:
-	@echo "not implemented"
+	$(PYTHON) -m demo.run_demo

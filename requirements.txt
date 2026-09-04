@@ -7,8 +7,10 @@ rapidfuzz
 phonenumbers
 scikit-learn
 matplotlib
-anthropic
+openai
 fastapi
 uvicorn
 pyyaml
 python-dotenv
+torch
+torch-geometric
