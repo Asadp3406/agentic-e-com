@@ -6,8 +6,7 @@ and an LLM agent investigator — with a React + FastAPI dashboard on top. Stric
 **Status: complete.** Part A (Stages 1-9, the detection engine) and Part B (Stages 10-13, the
 FastAPI + React web app) are both built, wired together, and verified live in a real browser
 against a real LLM. See [PLAN.md](PLAN.md) for the full design and staged build plan, and
-[PROGRESS.md](PROGRESS.md) for the detailed stage-by-stage log (what was built, what broke, and
-why, stage by stage).
+`docs/` for a stage-by-stage write-up of what was built, what broke, and why.
 
 ## Overview
 
@@ -301,8 +300,7 @@ Full numbers (money-optimal threshold 0.6170) from [`eval/report.md`](eval/repor
   clipped panel it drew far outside the visible area. Fixed with a `ResizeObserver`-driven
   container ref, the same pattern the main network graph already used.
 - Other per-stage issues (entity-resolution false merges, community-resolution tuning,
-  scorer feature-design bugs) are documented in their own stage docs and in
-  [PROGRESS.md](PROGRESS.md)'s stage log.
+  scorer feature-design bugs) are documented in their own stage docs under `docs/`.
 
 ## Failure handling (PLAN.md §10)
 

@@ -20,7 +20,7 @@ co-location? It never sees raw rows it would have to aggregate itself.
 
 REUSE, DON'T RECOMPUTE
 ------------------------
-Per PROGRESS.md's "things next session needs to know," this module is a thin, JSON-serializable
+This module is a thin, JSON-serializable
 wrapping layer over what Stages 3-5 already built:
   - get_members / get_shared_entities  -> graph/build.py::internal_edges()
   - get_events                         -> data/events.csv + data/orders.csv, grouped by

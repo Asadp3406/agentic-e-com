@@ -47,7 +47,7 @@ ranked by score, with a ground-truth tag (ring / benign-tag / mixed / unlabeled)
 to each -- ground truth is used HERE ONLY, for reporting how the blind score did, never
 as a scoring input. If a benign look-alike (family/office/hostel/couple) had ranked
 high, the fix belongs in features.py/scorer.py's weighting, not in ground-truth
-lookup -- see PROGRESS.md's Stage 5 entry for what was actually found while tuning
+lookup -- see docs/stage-5-ring-scoring.md for what was actually found while tuning
 this.
 
 OPTIONAL 7TH FEATURE: gnn_anomaly (Stage 6)

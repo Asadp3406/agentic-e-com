@@ -27,7 +27,11 @@ edge_weights:
 community_resolution: 0.001
 
 # Minimum ring-likelihood score for a community to be surfaced as suspicious.
-ring_score_threshold: 0   # TODO: e.g. 0.7
+# 0.6170 is the money-optimal threshold eval/run_eval.py's full ₹ cost sweep found on this
+# dataset (see eval/report.md) -- not consumed by detect/scorer.py itself (it ranks every
+# community unfiltered by design), but set here as the real operating value for anything
+# that needs a single "flag this community" cutoff (e.g. the API/web layer).
+ring_score_threshold: 0.6170
 
 # Cost model — used to convert detection outcomes into ₹ impact for threshold selection.
 # Filled in at Stage 7 (agent/policy.py needs real numbers to gate the `block` action on

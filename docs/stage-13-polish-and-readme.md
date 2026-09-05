@@ -40,7 +40,7 @@ suggested — find what's *actually* still missing, not rebuild what already wor
 
 ## 3. The one real gap: long reasoning text had no collapse
 
-Stage 12's own handoff notes (in `PROGRESS.md`) named this directly:
+Stage 12's own write-up (`docs/stage-12-case-file-and-metrics.md`) named this directly:
 
 > "the case file's `verdict.reasoning` prose and `evidence`/`benign_explanations_considered`
 > arrays are rendered directly (no truncation) — on a long-winded model response this could run
@@ -113,8 +113,8 @@ section by section:
   need to re-run `make eval`), with a pointer to the Metrics tab where the same numbers render
   live.
 - **What broke and what I did** — kept every prior entry, and added the two Stage 12 web bugs
-  (the `recommended_action` type/data mismatch, the blank evidence-subgraph sizing bug) that had
-  only been in `PROGRESS.md` before, not in the README's own version of this section.
+  (the `recommended_action` type/data mismatch, the blank evidence-subgraph sizing bug) that
+  weren't yet in the README's own version of this section.
 - **Failure handling** — kept the four PLAN.md §10 items, added two web-layer ones now that
   Part B is in scope: the `GET`-before-`POST /api/run` 409 empty state, and the case-file
   panel's own loading state for slow first-open LLM calls.

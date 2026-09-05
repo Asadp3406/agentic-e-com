@@ -66,7 +66,7 @@ before/after eval result.
 CUT RULE (PLAN.md §13 / §Stage 6)
 ------------------------------------
 "If this eats more than ~1.5 days, drop it and keep Stage 5. Say so in the README." See
-PROGRESS.md's Stage 6 entry and README's Metrics section for whether the eval justified
+docs/stage-6-gnn.md and README's Metrics section for whether the eval justified
 keeping `gnn.enabled: true` or turning it off.
 """
 
